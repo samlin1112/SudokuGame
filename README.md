@@ -23,12 +23,7 @@ This is a fully functional Sudoku game developed in C# using WinForms. The game 
 
 ### Installation
 
-1. Clone the repository:
-
-```bash
-git clone https://github.com/yourusername/sudoku-csharp.git
-```
-
+1. Clone the repository
 2. Open the solution file `SudokuGame.sln` in Visual Studio.
 3. Build and run the project.
 
