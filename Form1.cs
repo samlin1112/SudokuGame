@@ -13,9 +13,9 @@ namespace SudokuGame
     public partial class Form1 : Form
     {
         private TextBox[,] cells = new TextBox[9, 9];
-        private int[,] solution = new int[9, 9];   // §¹¾ã¸Ñ
-        private int[,] puzzle = new int[9, 9];     // ÃD¥Ø («õªÅ«á)
-        private bool[,] isGiven = new bool[9, 9];  // ¬O§_¬°ÃD¥Øµ¹©w
+        private int[,] solution = new int[9, 9];   // å®Œæ•´è§£
+        private int[,] puzzle = new int[9, 9];     // é¡Œç›® (æŒ–ç©ºå¾Œ)
+        private bool[,] isGiven = new bool[9, 9];  // æ˜¯å¦ç‚ºé¡Œç›®çµ¦å®š
         private int mistakeCount = 0;
         private TextBox selectedCell = null;
         private System.Windows.Forms.Timer gameTimer;
@@ -24,13 +24,13 @@ namespace SudokuGame
         private Label statusLabel;
         private Button newGameBtn;
         private ComboBox difficultyBox;
-
+        private Label countsLabel;
         private static readonly Random rng = new Random();
 
         public Form1()
         {
             Text = "Sudoku (WinForms)";
-            Width = 560;
+            Width = 660;
             Height = 660;
             InitControls();
             NewGame();
@@ -51,7 +51,7 @@ namespace SudokuGame
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 10));
             Controls.Add(root);
 
-            // ½L­±
+            // ç›¤é¢
             var board = new TableLayoutPanel
             {
                 RowCount = 9,
@@ -81,16 +81,16 @@ namespace SudokuGame
                     };
                     tb.Tag = new Point(r, c);
                     tb.MouseClick += Cell_MouseClick;
-                    tb.MouseEnter += Cell_MouseEnter;   // ·Æ¤J°ª«G
-                    tb.MouseLeave += Cell_MouseLeave;   // ÁÙ­ìÃC¦â
-                    tb.KeyPress += Cell_KeyPress;       // Áä½L¿é¤J
+                    tb.MouseEnter += Cell_MouseEnter;   // æ»‘å…¥é«˜äº®
+                    tb.MouseLeave += Cell_MouseLeave;   // é‚„åŸé¡è‰²
+                    tb.KeyPress += Cell_KeyPress;       // éµç›¤è¼¸å…¥
 
                     cells[r, c] = tb;
                     board.Controls.Add(tb, c, r);
                 }
             }
 
-            // ©³³¡¤u¨ã¦C
+            // åº•éƒ¨å·¥å…·åˆ—
             var bottom = new FlowLayoutPanel
             {
                 Dock = DockStyle.Fill,
@@ -100,7 +100,7 @@ namespace SudokuGame
 
             newGameBtn = new Button
             {
-                Text = "·s§½",
+                Text = "æ–°å±€",
                 AutoSize = true
             };
             newGameBtn.Click += (s, e) => NewGame();
@@ -110,76 +110,108 @@ namespace SudokuGame
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 Width = 120
             };
-            difficultyBox.Items.AddRange(new object[] { "Â²³æ", "´¶³q", "§xÃø" });
-            difficultyBox.SelectedIndex = 1; // ¹w³]´¶³q
-
+            difficultyBox.Items.AddRange(new object[] { "ç°¡å–®", "æ™®é€š", "å›°é›£" });
+            difficultyBox.SelectedIndex = 1; // é è¨­æ™®é€š
+            countsLabel = new Label
+            {
+                AutoSize = true,
+                Text = "å‰©é¤˜ï¼š1:9 2:9 3:9 4:9 5:9 6:9 7:9 8:9 9:9",
+                Margin = new Padding(16, 10, 0, 0)
+            };
+            bottom.Controls.Add(countsLabel);
             statusLabel = new Label
             {
                 AutoSize = true,
-                Text = "¿ù»~¡G0/3",
+                Text = "éŒ¯èª¤ï¼š0/3",
                 Margin = new Padding(12, 10, 0, 0)
             };
 
             bottom.Controls.Add(newGameBtn);
-            bottom.Controls.Add(new Label { Text = "Ãø«×¡G", AutoSize = true, Margin = new Padding(16, 10, 0, 0) });
+            bottom.Controls.Add(new Label { Text = "é›£åº¦ï¼š", AutoSize = true, Margin = new Padding(16, 10, 0, 0) });
             bottom.Controls.Add(difficultyBox);
             bottom.Controls.Add(statusLabel);
             root.Controls.Add(bottom, 0, 1);
         }
         private void InitTimer()
         {
-            // ½T«O¹CÀ¸¶}©l®É¡A­p®É¾¹³Qªì©l¤Æ¥B¤£­«½Æ³Ğ«Ø
+            // ç¢ºä¿éŠæˆ²é–‹å§‹æ™‚ï¼Œè¨ˆæ™‚å™¨è¢«åˆå§‹åŒ–ä¸”ä¸é‡è¤‡å‰µå»º
             if (gameTimer == null)
             {
                 gameTimer = new System.Windows.Forms.Timer();
-                gameTimer.Interval = 1000; // ¨C¬í
+                gameTimer.Interval = 1000; // æ¯ç§’
                 gameTimer.Tick += (s, e) =>
                 {
                     elapsedSeconds++;
-                    lblTimer.Text = $"®É¶¡¡G{elapsedSeconds / 60:D2}:{elapsedSeconds % 60:D2}";
+                    lblTimer.Text = $"æ™‚é–“ï¼š{elapsedSeconds / 60:D2}:{elapsedSeconds % 60:D2}";
                 };
             }
             
-            // °±¤î¨Ã²M°£ÂÂªº­p®É¾¹¡AÁ×§K­«½Æ±Ò°Ê
+            // åœæ­¢ä¸¦æ¸…é™¤èˆŠçš„è¨ˆæ™‚å™¨ï¼Œé¿å…é‡è¤‡å•Ÿå‹•
             if (gameTimer.Enabled)
             {
                 gameTimer.Stop();
             }
             if (lblTimer == null)
             {
-                lblTimer = new Label { Text = "®É¶¡¡G00:00", Dock = DockStyle.Top, Font = new Font("Consolas", 14, FontStyle.Bold), Height = 30, TextAlign = ContentAlignment.MiddleCenter };
+                lblTimer = new Label { Text = "æ™‚é–“ï¼š00:00", Dock = DockStyle.Top, Font = new Font("Consolas", 14, FontStyle.Bold), Height = 30, TextAlign = ContentAlignment.MiddleCenter };
             }
-            // ­«·sªì©l¤Æ­p®É¾¹ªº®É¶¡
+            // é‡æ–°åˆå§‹åŒ–è¨ˆæ™‚å™¨çš„æ™‚é–“
             elapsedSeconds = 0;
-            lblTimer.Text = "®É¶¡¡G00:00";
-            gameTimer.Start(); // ­«·s¶}©l­p®É¾¹
+            lblTimer.Text = "æ™‚é–“ï¼š00:00";
+            gameTimer.Start(); // é‡æ–°é–‹å§‹è¨ˆæ™‚å™¨
 
-            // ½T«O­p®É¾¹¥uÅã¥Ü¤@¦¸
+            // ç¢ºä¿è¨ˆæ™‚å™¨åªé¡¯ç¤ºä¸€æ¬¡
             if (!this.Controls.Contains(lblTimer))
             {
                 this.Controls.Add(lblTimer);
             }
         }
+        private void UpdateCounts()
+        {
+            int[] counts = new int[10]; // çµ±è¨ˆ 1~9 å‡ºç¾æ¬¡æ•¸
+
+            for (int r = 0; r < 9; r++)
+            {
+                for (int c = 0; c < 9; c++)
+                {
+                    if (int.TryParse(cells[r, c].Text, out int v) && v >= 1 && v <= 9)
+                    {
+                        counts[v]++;
+                    }
+                }
+            }
+
+            // æ¯å€‹æ•¸å­—æ‡‰è©²æœ€å¤šå‡ºç¾ 9 æ¬¡
+            string text = "å‰©é¤˜ï¼š";
+            for (int n = 1; n <= 9; n++)
+            {
+                int remain = 9 - counts[n];
+                text += $"{n}:{remain} ";
+            }
+            countsLabel.Text = text.Trim();
+        }
 
         private void NewGame()
         {
             mistakeCount = 0;
-            statusLabel.Text = "¿ù»~¡G0/3";
+            statusLabel.Text = "éŒ¯èª¤ï¼š0/3";
             InitTimer();
-            // 1) ¥Í¦¨§¹¾ã¸Ñ
+            // 1) ç”Ÿæˆå®Œæ•´è§£
             solution = Sudoku.GenerateFullSolution();
 
-            // 2) ¨ÌÃø«×«õªÅ¥B«OÃÒ°ß¤@¸Ñ
+            // 2) ä¾é›£åº¦æŒ–ç©ºä¸”ä¿è­‰å”¯ä¸€è§£
             int clues = difficultyBox.SelectedIndex switch
             {
-                0 => rng.Next(38, 46), // Â²³æ¡G¸û¦h½u¯Á
-                2 => rng.Next(24, 30), // §xÃø¡G¸û¤Ö½u¯Á
-                _ => rng.Next(30, 38), // ´¶³q
+                0 => rng.Next(38, 46), // ç°¡å–®ï¼šè¼ƒå¤šç·šç´¢
+                2 => rng.Next(24, 30), // å›°é›£ï¼šè¼ƒå°‘ç·šç´¢
+                _ => rng.Next(30, 38), // æ™®é€š
             };
             puzzle = Sudoku.MakePuzzleWithUniqueSolution(solution, clues);
 
-            // 3) ¸ü¤J½L­±
+            // 3) è¼‰å…¥ç›¤é¢
             LoadPuzzle();
+            UpdateCounts();
+
         }
 
         private void LoadPuzzle()
@@ -211,9 +243,9 @@ namespace SudokuGame
 
         private static Color GetDefaultCellColor(int r, int c)
         {
-            // 3x3 °Ï¶ô­I´º·L¤À¦â¡A©öÅª
+            // 3x3 å€å¡ŠèƒŒæ™¯å¾®åˆ†è‰²ï¼Œæ˜“è®€
             bool block = ((r / 3) + (c / 3)) % 2 == 0;
-            return block ? Color.White : Color.FromArgb(245, 245, 245);
+            return block ? Color.FromArgb(245, 0, 0) : Color.FromArgb(0, 245,0 );
         }
 
         private void Cell_MouseClick(object sender, MouseEventArgs e)
@@ -228,7 +260,7 @@ namespace SudokuGame
             if (string.IsNullOrWhiteSpace(tb.Text)) return;
 
             string num = tb.Text.Trim();
-            // °ª«G¡G¬Û¦P¼Æ¦r¥ş«G¶À¡A¨ä¥¦¨Ì­ì¦â
+            // é«˜äº®ï¼šç›¸åŒæ•¸å­—å…¨äº®é»ƒï¼Œå…¶å®ƒä¾åŸè‰²
             for (int r = 0; r < 9; r++)
             {
                 for (int c = 0; c < 9; c++)
@@ -243,7 +275,7 @@ namespace SudokuGame
 
         private void Cell_MouseLeave(object sender, EventArgs e)
         {
-            // ÁÙ­ì­I´º
+            // é‚„åŸèƒŒæ™¯
             for (int r = 0; r < 9; r++)
                 for (int c = 0; c < 9; c++)
                     cells[r, c].BackColor = GetDefaultCellColor(r, c);
@@ -256,25 +288,26 @@ namespace SudokuGame
             var p = (Point)tb.Tag;
             int r = p.X, c = p.Y;
 
-            if (isGiven[r, c]) { e.Handled = true; return; } // ÃD¥Øµ¹©w¤£¥i§ï
+            if (isGiven[r, c]) { e.Handled = true; return; } // é¡Œç›®çµ¦å®šä¸å¯æ”¹
 
             if (e.KeyChar == (char)Keys.Back || e.KeyChar == (char)Keys.Delete)
             {
                 tb.Text = string.Empty;
                 e.Handled = true;
+                UpdateCounts();
                 return;
             }
 
             if (!char.IsDigit(e.KeyChar) || e.KeyChar == '0')
             {
-                e.Handled = true; // ¥u¤¹³\ 1-9
+                e.Handled = true; // åªå…è¨± 1-9
                 return;
             }
 
             int num = e.KeyChar - '0';
-            e.Handled = true; // §Ú­Ì¦Û¦æ³B²z¿é¤J
+            e.Handled = true; // æˆ‘å€‘è‡ªè¡Œè™•ç†è¼¸å…¥
 
-            // §PÂ_¥¿½T»P§_
+            // åˆ¤æ–·æ­£ç¢ºèˆ‡å¦
             if (solution[r, c] == num)
             {
                 tb.Text = num.ToString();
@@ -283,23 +316,26 @@ namespace SudokuGame
                 if (IsBoardCompleted())
                 {
                     gameTimer.Stop();
-                    MessageBox.Show($"®¥³ß§¹¦¨¡I¯Ó®É {elapsedSeconds / 60:D2}:{elapsedSeconds % 60:D2}");
+                    MessageBox.Show($"æ­å–œå®Œæˆï¼è€—æ™‚ {elapsedSeconds / 60:D2}:{elapsedSeconds % 60:D2}");
                 }
+                UpdateCounts();
+
             }
             else
             {
                 tb.Text = num.ToString();
                 tb.ForeColor = Color.Red;
                 mistakeCount++;
-                statusLabel.Text = $"¿ù»~¡G{mistakeCount}/3";
+                statusLabel.Text = $"éŒ¯èª¤ï¼š{mistakeCount}/3";
 
                 if (mistakeCount >= 3)
                 {
                     RevealSolutionAsFailure();
                     gameTimer.Stop();
-                    MessageBox.Show($"¹CÀ¸¥¢±Ñ¡I¿ù»~¶W¹L¤T¦¸¡I¥Î®É {elapsedSeconds / 60:D2}:{elapsedSeconds % 60:D2}");
+                    MessageBox.Show($"éŠæˆ²å¤±æ•—ï¼éŒ¯èª¤è¶…éä¸‰æ¬¡ï¼ç”¨æ™‚ {elapsedSeconds / 60:D2}:{elapsedSeconds % 60:D2}");
                 }
             }
+
         }
 
         private bool IsBoardCompleted()
@@ -322,14 +358,14 @@ namespace SudokuGame
                 {
                     cells[r, c].Text = solution[r, c].ToString();
                     if (!isGiven[r, c])
-                        cells[r, c].ForeColor = Color.Red; // ÃD¥Ø¤¤­ì¥»­n¶ñªºÅã¥Ü¬õ¦â
+                        cells[r, c].ForeColor = Color.Red; // é¡Œç›®ä¸­åŸæœ¬è¦å¡«çš„é¡¯ç¤ºç´…è‰²
                 }
             }
         }
     }
 
     /// <summary>
-    /// ¼Æ¿W¥Í¦¨/ÅçÃÒ®Ö¤ß
+    /// æ•¸ç¨ç”Ÿæˆ/é©—è­‰æ ¸å¿ƒ
     /// </summary>
     public static class Sudoku
     {
@@ -346,10 +382,10 @@ namespace SudokuGame
         {
             int[,] puzzle = (int[,])full.Clone();
 
-            // ¦ì¸m¶¶§ÇÀH¾÷¤Æ
+            // ä½ç½®é †åºéš¨æ©ŸåŒ–
             var idx = Enumerable.Range(0, 81).OrderBy(_ => rng.Next()).ToList();
 
-            // ¾¨¶q«õ¨ì³Ñ¤U cluesTarget ­Ó½u¯Á¡A¹Lµ{¤¤«O«ù°ß¤@¸Ñ
+            // å„˜é‡æŒ–åˆ°å‰©ä¸‹ cluesTarget å€‹ç·šç´¢ï¼Œéç¨‹ä¸­ä¿æŒå”¯ä¸€è§£
             int clues = 81;
             foreach (int k in idx)
             {
@@ -361,7 +397,7 @@ namespace SudokuGame
 
                 if (!HasUniqueSolution(puzzle))
                 {
-                    // ¤£°ß¤@¡AºM¦^
+                    // ä¸å”¯ä¸€ï¼Œæ’¤å›
                     puzzle[r, c] = saved;
                 }
                 else
@@ -376,14 +412,14 @@ namespace SudokuGame
         public static bool HasUniqueSolution(int[,] puzzle)
         {
             int count = 0;
-            // ¥Î¤@­Ó­p¼Æ¨D¸Ñ¾¹¡A§ä¨ì¨â­Ó¸Ñ´N´£«e°±¤î
+            // ç”¨ä¸€å€‹è¨ˆæ•¸æ±‚è§£å™¨ï¼Œæ‰¾åˆ°å…©å€‹è§£å°±æå‰åœæ­¢
             CountSolutions((int[,])puzzle.Clone(), 0, 0, ref count, 2);
             return count == 1;
         }
 
         private static bool SolveBacktracking(int[,] board, int r, int c, bool randomize)
         {
-            if (r == 9) return true;          // §¹¦¨
+            if (r == 9) return true;          // å®Œæˆ
             if (c == 9) return SolveBacktracking(board, r + 1, 0, randomize);
             if (board[r, c] != 0) return SolveBacktracking(board, r, c + 1, randomize);
 
@@ -406,12 +442,12 @@ namespace SudokuGame
 
         private static void CountSolutions(int[,] board, int r, int c, ref int count, int limit)
         {
-            if (count >= limit) return;       // ¦­°±
+            if (count >= limit) return;       // æ—©åœ
             if (r == 9) { count++; return; }
             if (c == 9) { CountSolutions(board, r + 1, 0, ref count, limit); return; }
             if (board[r, c] != 0) { CountSolutions(board, r, c + 1, ref count, limit); return; }
 
-            // Â²³æ±Òµo¦¡¡G¹Á¸Õ­Ô¿ï¼Æ¸û¤ÖªÌ (¦¹³B´N´N¦a­pºâ)
+            // ç°¡å–®å•Ÿç™¼å¼ï¼šå˜—è©¦å€™é¸æ•¸è¼ƒå°‘è€… (æ­¤è™•å°±å°±åœ°è¨ˆç®—)
             var candidates = GetCandidates(board, r, c);
             foreach (int v in candidates)
             {
@@ -437,7 +473,7 @@ namespace SudokuGame
 
             var list = new List<int>();
             for (int v = 1; v <= 9; v++) if (!used[v]) list.Add(v);
-            // ÀH¾÷¤Æ¥H¼W¥[¦h¼Ë©Ê
+            // éš¨æ©ŸåŒ–ä»¥å¢åŠ å¤šæ¨£æ€§
             Shuffle(list);
             return list;
         }
